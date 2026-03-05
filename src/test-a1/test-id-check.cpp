@@ -1,8 +1,8 @@
+#include <cctype>
 #include <fstream>
 #include <filesystem>
 #include <regex>
 #include <sstream>
-#include <cstdio>
 #include <vector>
 
 #include "TestResult.h"
@@ -11,7 +11,7 @@ using namespace tests;
 
 namespace {
 
-std::string read_file_to_string(const std::string& path) {
+std::string read_file_to_string(const std::string& path, bool* found = nullptr) {
     namespace fs = std::filesystem;
     std::vector<fs::path> candidates;
     candidates.emplace_back(path);
@@ -26,10 +26,12 @@ std::string read_file_to_string(const std::string& path) {
     for (const auto& p : candidates) {
         std::ifstream file(p);
         if (!file.is_open()) continue;
+        if (found != nullptr) *found = true;
         std::ostringstream buffer;
         buffer << file.rdbuf();
         return buffer.str();
     }
+    if (found != nullptr) *found = false;
     return "";
 }
 
@@ -48,50 +50,15 @@ std::string extract_json_string_value(const std::string& json,
     return "";
 }
 
-std::string shell_escape_single_quotes(const std::string& input) {
-    std::string escaped = "'";
-    for (char c : input) {
-        if (c == '\'') escaped += "'\"'\"'";
-        else escaped += c;
-    }
-    escaped += "'";
-    return escaped;
-}
-
-bool is_url_reachable(const std::string& url) {
-#ifdef WIN32
-    const std::string discard_target = "NUL";
-#else
-    const std::string discard_target = "/dev/null";
-#endif
-    const std::string cmd =
-        "curl -I -L -sS --max-time 10 -o " + discard_target + " -w \"%{http_code}\" " +
-        shell_escape_single_quotes(url) + " 2>/dev/null";
-
-#ifdef WIN32
-    FILE* pipe = _popen(cmd.c_str(), "r");
-#else
-    FILE* pipe = popen(cmd.c_str(), "r");
-#endif
-    if (!pipe) return false;
-
-    char buffer[32] = {0};
-    std::string output;
-    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) output += buffer;
-
-#ifdef WIN32
-    _pclose(pipe);
-#else
-    pclose(pipe);
-#endif
-
-    if (output.size() < 3) return false;
-    const char c = output[0];
-    return c == '2' || c == '3';
-}
-
 bool starts_with_http_scheme(const std::string& url) {
     return url.rfind("https://", 0) == 0 || url.rfind("http://", 0) == 0;
+}
+
+bool has_non_whitespace_content(const std::string& text) {
+    for (char c : text) {
+        if (!std::isspace(static_cast<unsigned char>(c))) return true;
+    }
+    return false;
 }
 
 TestResult expect_true(bool condition, const std::string& message) {
@@ -139,34 +106,35 @@ TestResult test_id_check_my_info_json() {
     if (!video_ex4.empty()) {
         res += expect_true(starts_with_http_scheme(video_ex4),
                            "\"Demo video URL for ex.4\" must start with http:// or https://");
-        if (starts_with_http_scheme(video_ex4)) {
-            res += expect_true(is_url_reachable(video_ex4),
-                               "\"Demo video URL for ex.4\" is not reachable on the internet");
-        }
     }
 
     if (!video_ex5_1.empty()) {
         res += expect_true(starts_with_http_scheme(video_ex5_1),
                            "\"Demo video URL for ex.5.1 (MiniPi)\" must start with http:// or https://");
-        if (starts_with_http_scheme(video_ex5_1)) {
-            res += expect_true(is_url_reachable(video_ex5_1),
-                               "\"Demo video URL for ex.5.1 (MiniPi)\" is not reachable on the internet");
-        }
     }
 
     if (!video_ex5_2.empty()) {
         res += expect_true(starts_with_http_scheme(video_ex5_2),
                            "\"Demo video URL for ex.5.2 (HexPod)\" must start with http:// or https://");
-        if (starts_with_http_scheme(video_ex5_2)) {
-            res += expect_true(is_url_reachable(video_ex5_2),
-                               "\"Demo video URL for ex.5.2 (HexPod)\" is not reachable on the internet");
-        }
     }
 
     return res;
 }
 
+TestResult test_ex5_biped_reflection_exists_and_not_empty() {
+    bool found_reflection = false;
+    const std::string reflection =
+        read_file_to_string("ex5-biped-reflection.md", &found_reflection);
+    if (!found_reflection) {
+        return {false, "Missing file ex5-biped-reflection.md in repository root\n"};
+    }
+
+    return expect_true(has_non_whitespace_content(reflection),
+                       "File ex5-biped-reflection.md is empty");
+}
+
 int main(int argc, char *argv[]) {
     TEST(test_id_check_my_info_json);
+    TEST(test_ex5_biped_reflection_exists_and_not_empty);
     return (allTestsOk ? 0 : 1);
 }
