@@ -283,12 +283,28 @@ We provide a suite of student-facing (public) tests covering Ex.2 and Ex.3 to he
 
 ```bash
 # Run everything in a batch
+cd build
 ctest -R test-a1-
 
 # Or run per exercise
 ctest -R test-a1-ex2-
 ctest -R test-a1-ex3-
 ```
+
+<details>
+<summary>if you prefer a more graphical interface for building and testing (click to expand)</summary>
+
+1. Install extensions:
+   - [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)
+2. Open this folder in VS Code, then run `CMake: Select a Kit` and pick your compiler.
+3. Run `CMake: Configure` and `CMake: Build`.
+4. Open the **Testing** panel in VS Code to discover and run tests (or continue using `ctest` in terminal).
+
+More details:
+- CMake Tools docs: <https://github.com/microsoft/vscode-cmake-tools/tree/main/docs>
+- VS Code Testing docs: <https://code.visualstudio.com/docs/debugtest/testing>
+</details>
+
 
 Public test targets are:
 
