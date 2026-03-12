@@ -56,7 +56,20 @@ public:
             //   see https://eigen.tuxfamily.org/dox-devel/group__LeastSquares.html
 
             // TODO: your implementation should be here.
+            int nDOF = q.size() - 6;
+            int nEE = endEffectorTargets.size();
+            Matrix J_stacked(3 * nEE, nDOF);
+            dVector e_stacked(3 * nEE);
+            for (int j = 0; j < nEE; j++) {
+                auto &ee = endEffectorTargets[j];
+                Matrix dpdq;
+                gcrr.estimate_linear_jacobian(ee.p, ee.rb, dpdq);
+                J_stacked.block(3 * j, 0, 3, nDOF) = dpdq.block(0, 6, 3, nDOF);
+                P3D pos_current = gcrr.getWorldCoordinates(ee.p, ee.rb);
+                e_stacked.segment(3 * j, 3) = V3D(pos_current, ee.target);
+            }
 
+            deltaq = (J_stacked.transpose() * J_stacked).ldlt().solve(J_stacked.transpose() * e_stacked);
             q.tail(q.size() - 6) += deltaq;
 
             // now update gcrr with q
