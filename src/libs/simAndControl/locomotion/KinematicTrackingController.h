@@ -19,7 +19,7 @@ public:
 
     // Terrain obstacles for Ex.4/5.
     // Students can add spheres here, e.g. {P3D(0, -11.5, 0), 12}.
-    std::vector<std::pair<P3D, double>> spheres = {};
+    std::vector<std::pair<P3D, double>> spheres = {{P3D(0, -11.5, 0), 12}};
 
 public:
     /**
@@ -47,6 +47,7 @@ public:
         // follow target base trajectory.
         P3D targetPos =
             planner->getTargetTrunkPositionAtTime(planner->getSimTime() + dt);
+        targetPos.y += getGroundHeight(targetPos.x, targetPos.z);
         Quaternion targetOrientation = planner->getTargetTrunkOrientationAtTime(
             planner->getSimTime() + dt);
 
@@ -56,6 +57,7 @@ public:
         for (uint i = 0; i < robot->limbs.size(); i++) {
             P3D target = planner->getTargetLimbEEPositionAtTime(
                 robot->limbs[i], planner->getSimTime() + dt);
+            target.y += getGroundHeight(target.x, target.z);
 
             ikSolver->addEndEffectorTarget(
                 robot->limbs[i]->eeRB, robot->limbs[i]->ee->endEffectorOffset,
@@ -82,11 +84,24 @@ public:
     }
 
     double getGroundHeight(double x, double z) {
-        return 0.0;
+        double h = 0.0;
+        for (auto &sphere : spheres) {
+            double dx = x - sphere.first.x;
+            double dz = z - sphere.first.z;
+            double dist_sqr = dx * dx + dz * dz;
+            double r = sphere.second;
+            if (dist_sqr <= r * r) {
+                double height = sphere.first.y + sqrt(r * r - dist_sqr);
+                h = std::max(h, height);
+            }
+        }
+        return h;
     }
 
     void drawBump(gui::Shader *shader) {
-        (void)shader;
+        for (auto &sphere : spheres) {
+            drawSphere(sphere.first, sphere.second, *shader, V3D(0, 0, 0));
+        }
     }
 };
 

@@ -218,6 +218,7 @@ public:
     virtual void drawObjectsWithShadows() override {
         ground.draw(shadowShader, V3D(0.6, 0.6, 0.8));
         robot->draw(shadowShader);
+        controller->drawBump(&shadowShader);
     }
 
     // objects drawn with basic shadowShader (during the render pass) will not
