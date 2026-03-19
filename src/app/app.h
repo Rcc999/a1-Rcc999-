@@ -45,7 +45,7 @@ public:
         // ------------------------------------------------------------------------
         // TODO: ex 5 change the robot model from index 0 to 1 (MiniPi),
         // and then to index 2 (HexPod/Spiderpi)
-        setupRobotAndController(robotModels[0]);
+        setupRobotAndController(robotModels[2]);
     }
 
     virtual ~App() override {
@@ -171,6 +171,7 @@ public:
                 controller->trajectory.size() >= kRecordMaxFrames) {
                 recordTrajectory = false;
                 Logger::consolePrint("Stop recording with [%d] frames!", controller->trajectory.size());
+                saveTrajectoryToJson();
             }
             controller->advanceInTime(dt);
 
@@ -391,6 +392,9 @@ private:
         if (robot->limbs.size() == 2) {
             // Biped gait pattern (2 limbs)
             // TODO: ex 5.1 replace with your own gait pattern for the biped
+            pg.addSwingPhaseForLimb(robot->limbs[0], 0.0, 0.4);
+            pg.addSwingPhaseForLimb(robot->limbs[1], 0.5, 0.9);
+            pg.strideDuration = 0.8;
 
         } else if (robot->limbs.size() == 4) {
             // Foot contact timeline for the quadruped robot
@@ -401,9 +405,13 @@ private:
             pg.addSwingPhaseForLimb(robot->limbs[3], 0 - tOffset, 0.5 + tOffset);
             pg.strideDuration = 0.7;
         } else if (robot->limbs.size() == 6) {
-            // Hexapod gait pattern (6 limbs)
-            // TODO: ex 5.2 replace with your own gait pattern for the hexapod
-
+            pg.addSwingPhaseForLimb(robot->limbs[0], 0.0, 0.5); // front-right
+            pg.addSwingPhaseForLimb(robot->limbs[2], 0.0, 0.5); // rear-right
+            pg.addSwingPhaseForLimb(robot->limbs[4], 0.0, 0.5); // mid-left
+            pg.addSwingPhaseForLimb(robot->limbs[1], 0.5, 1.0); // mid-right
+            pg.addSwingPhaseForLimb(robot->limbs[3], 0.5, 1.0); // rear-left
+            pg.addSwingPhaseForLimb(robot->limbs[5], 0.5, 1.0); // front-left
+            pg.strideDuration = 0.8;
         }
 
         return pg;
