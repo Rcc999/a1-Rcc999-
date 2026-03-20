@@ -405,12 +405,12 @@ private:
             pg.addSwingPhaseForLimb(robot->limbs[3], 0 - tOffset, 0.5 + tOffset);
             pg.strideDuration = 0.7;
         } else if (robot->limbs.size() == 6) {
-            pg.addSwingPhaseForLimb(robot->limbs[0], 0.0, 0.5); // front-right
-            pg.addSwingPhaseForLimb(robot->limbs[2], 0.0, 0.5); // rear-right
-            pg.addSwingPhaseForLimb(robot->limbs[4], 0.0, 0.5); // mid-left
-            pg.addSwingPhaseForLimb(robot->limbs[1], 0.5, 1.0); // mid-right
-            pg.addSwingPhaseForLimb(robot->limbs[3], 0.5, 1.0); // rear-left
-            pg.addSwingPhaseForLimb(robot->limbs[5], 0.5, 1.0); // front-left
+            pg.addSwingPhaseForLimb(robot->limbs[0], 0.0, 0.5); 
+            pg.addSwingPhaseForLimb(robot->limbs[2], 0.0, 0.5); 
+            pg.addSwingPhaseForLimb(robot->limbs[4], 0.0, 0.5); 
+            pg.addSwingPhaseForLimb(robot->limbs[1], 0.5, 1.0); 
+            pg.addSwingPhaseForLimb(robot->limbs[3], 0.5, 1.0); 
+            pg.addSwingPhaseForLimb(robot->limbs[5], 0.5, 1.0); 
             pg.strideDuration = 0.8;
         }
 
